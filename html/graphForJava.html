@@ -3,71 +3,247 @@
 
 <head>
     <meta charset="utf-8">
+    <style>
+        /* 新增样式，用于设置选中状态的背景颜色 */
+        #fileList li.selected {
+            background-color: #ff657d; /* 默认选中状态的背景颜色 */
+            color: #ffffff; /* 默认选中状态的文字颜色 */
+        }
+
+        /* 新增样式，用于美化搜索框 */
+        #searchInput {
+            margin: 10px;
+            padding: 8px;
+            width: 80%;
+            font-size: 14px;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+
+        /* 移除li标签前面的小圆点 */
+        #fileList li {
+            list-style-type: none;
+            margin: 10px;
+            padding: 10px;
+        }
+
+        /* 添加样式，使滚动条隐藏 */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        #leftPanel {
+            overflow: hidden;
+            background: #0f011d;
+            color: chartreuse;
+            font-size: 16px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0; /* Ensure flex items can shrink past their content */
+            position: relative;
+        }
+
+        #leftPanelInner {
+            flex-grow: 1; /* Allow the inner container to grow and fill the available space */
+            overflow-y: auto;
+        }
+
+        #container {
+            flex-grow: 1;
+            background: #15012b;
+        }
+
+        /* 添加样式，使左侧列表和右侧容器之间有一个拖动条 */
+        #dragBar {
+            cursor: ew-resize;
+            width: 8px;
+            background: #333;
+            height: 100%;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+        .tapInfo {
+            width: 300px;
+            margin-left: 10px;
+            padding: 10px;
+            color: white;
+        }
+    </style>
 </head>
 
-<body style="height: 100%; margin: 0">
-<div style="float: left; width: 20%; padding: 10px; overflow-y: auto; height: 100%">
-    <ul id="fileList"></ul>
-</div>
-<div id="container" style="float: left; width: 80%; height: 100%"></div>
+<body style="height: 100%; margin: 0;padding: 0">
+    <div style="display:flex; height: 100vh; width: 100%">
+        <div id="leftPanel">
+            <div class="tapInfo">😀：健康依赖</div>
+            <div class="tapInfo">🧨：存在循环依赖待解决</div>
+            <div class="tapInfo">🍜：@Lazy已解决循环依赖</div>
+            <!-- 添加搜索框 -->
+            <input style="margin-left: 10px" type="text" id="searchInput" placeholder="模糊搜索">
+            <div id="leftPanelInner">
+                <ul style="padding: 0" id="fileList"></ul>
+            </div>
+            <div id="dragBar"></div>
+        </div>
+        <div id="container"></div>
+    </div>
 
-<script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.7.1/jquery.min.js"></script>
-<script type="text/javascript" src="https://registry.npmmirror.com/echarts/5.4.3/files/dist/echarts.min.js"></script>
+    <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.7.1/jquery.min.js"></script>
+    <script type="text/javascript"
+        src="https://registry.npmmirror.com/echarts/5.4.3/files/dist/echarts.min.js"></script>
 
-<script type="text/javascript">
-    var dom = document.getElementById('container');
-    var myChart = echarts.init(dom, 'dark', {
-        renderer: 'canvas',
-        useDirtyRect: false
-    });
-    var app = {};
+    <script type="text/javascript">
+        var dom = document.getElementById('container');
+        var myChart = echarts.init(dom, 'dark', {
+            renderer: 'canvas',
+            useDirtyRect: false
+        });
+        var app = {};
 
-    var option;
-    var baseUrl = 'http://127.0.0.1:16556/json/';
-    var fileList = $('#fileList');
+        var option;
+        var baseUrl = 'http://127.0.0.1:15665/json/';
+        var fileList = $('#fileList');
+        var searchInput = $('#searchInput');
 
-    // 获取并填充文件列表
-    $.getJSON(
-        baseUrl,
-        function (files) {
-            files.forEach(function (file) {
-                fileList.append('<li>' + file + '</li>');
-            });
+        // 获取并填充文件列表
+        $.get(
+            baseUrl,
+            function (html) {
+                // 通过 DOMParser 解析 HTML 字符串
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+                // 获取所有的 <a> 标签
+                var anchorElements = doc.querySelectorAll('a');
+                // 遍历所有的 <a> 标签并输出文本信息
+                anchorElements.forEach(function (element) {
+                    var fileName = element.innerText
+                    fileList.append('<li>' + fileName + '</li>');
+                    console.log(element.textContent || element.innerText);
+                });
 
-            // 为列表项添加点击事件监听器
-            fileList.on('click', 'li', function () {
-                var selectedFile = $(this).text();
-                var url = baseUrl + selectedFile;
+                // 添加搜索功能
+                searchInput.on('input', function () {
+                    var searchText = $(this).val().toLowerCase();
+                    fileList.find('li').hide().filter(function () {
+                        return $(this).text().toLowerCase().includes(searchText);
+                    }).show();
+                });
 
-                // 获取并使用新数据更新图表
-                myChart.showLoading();
-                $.getJSON(
-                    url,
-                    function (graph) {
-                        myChart.hideLoading();
-                        // 使用新数据更新图表
-                        // ...
+                // 为列表项添加点击事件监听器
+                fileList.on('click', 'li', function () {
+                    console.log("List item clicked!"); // 用于调试的新行
+                    var selectedFile = $(this).text();
+                    var url = baseUrl + selectedFile;
 
-                        // 使用选定的文件名更新标题
-                        option.title.text = 'javaBean依赖注入关系图 - ' + selectedFile;
-                        myChart.setOption(option);
-                    }
-                );
-            });
+                    // 移除之前选中项的选中状态
+                    fileList.find('li').removeClass('selected');
+                    // 添加选中状态的背景颜色
+                    $(this).addClass('selected');
+
+                    console.log("Selected URL:", url); // 用于调试的新行
+                    myChart.showLoading();
+                    $.getJSON(
+                        url,
+                        function (graph) {
+                            myChart.hideLoading();
+                            graph.nodes.forEach(function (node) {
+                                node.label = {
+                                    show: node.symbolSize >= 0
+                                };
+                            });
+                            option = {
+                                title: {
+                                    text: 'javaBean依赖注入关系图',
+                                    subtext: 'Default layout',
+                                    top: 'bottom',
+                                    left: 'right'
+                                },
+                                tooltip: {},
+                                legend: [
+                                    {
+                                        // selectedMode: 'single',
+                                        data: graph.categories.map(function (a) {
+                                            return a.name;
+                                        })
+                                    }
+                                ],
+                                animationDuration: 15000,
+                                animationEasingUpdate: 'quinticInOut',
+                                series: [
+                                    {
+                                        name: 'tght',
+                                        type: 'graph',
+                                        layout: 'none',
+                                        data: graph.nodes,
+                                        links: graph.links,
+                                        categories: graph.categories,
+                                        roam: true,
+                                        label: {
+                                            position: 'right',
+                                            formatter: '{b}'
+                                        },
+                                        lineStyle: {
+                                            color: 'source',
+                                            curveness: 0.3
+                                        },
+                                        edgeSymbol: ['circle', 'arrow'],
+                                        edgeSymbolSize: [4, 10],
+                                        emphasis: {
+                                            focus: 'adjacency',
+                                            lineStyle: {
+                                                width: 10
+                                            }
+                                        }
+                                    }
+                                ]
+                            };
+                            myChart.setOption(option);
+                        }
+                    );
+                });
+
+                // 手动触发第一个列表项的点击事件
+                fileList.find('li:first').click();
+            }
+        );
+
+        if (option && typeof option === 'object') {
+            myChart.setOption(option);
         }
-    );
 
-    // 初始图表配置
-    option = {
-        // 初始的图表配置
-    };
+        // 添加拖动调整宽度的逻辑
+        var isDragging = false;
+        var startX, startWidth;
 
-    if (option && typeof option === 'object') {
-        myChart.setOption(option);
-    }
+        $('#dragBar').mousedown(function (e) {
+            isDragging = true;
+            startX = e.pageX;
+            startWidth = $('#leftPanel').width();
+            //阻止默认行为和事件传播
+            e.preventDefault();
+            e.stopPropagation();
+        });
 
-    window.addEventListener('resize', myChart.resize);
-</script>
+        $(document).mousemove(function (e) {
+            if (isDragging) {
+                var newWidth = startWidth + (e.pageX - startX);
+                $('#leftPanel').width(newWidth);
+                $('#container').width($(window).width() - newWidth);
+            }
+        });
+
+        $(document).mouseup(function () {
+            isDragging = false;
+        });
+
+        window.addEventListener('resize', function () {
+            myChart.resize();
+            // 动态调整右侧容器的宽度
+            var leftPanelWidth = $('#leftPanel').width();
+            $('#container').width($(window).width() - leftPanelWidth);
+            $('#dragBar').css('right', 0); // Reset the position of the drag bar
+        });
+    </script>
 </body>
 
 </html>
