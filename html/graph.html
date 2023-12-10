@@ -1,0 +1,111 @@
+<!--
+	此示例下载自 https://echarts.apache.org/examples/zh/editor.html?c=graph&lang=js&decal=1&theme=dark&code=LYTwwgFghgTgLgOgM4QPYHcAyqoBMCWAdgOYAUAlANwBQAJAsQKZwBSAygPIByp1ABHwDkEOHAAOSAFwB6acCL5UyaISgIoSfFGkooq6agCu44wgBWSVIQD8ADQC0AQWAAvJwBtiqGPjgRgALyOAOpsACz2ABIAso5g9myRjgBMAKwAbABkDs5uYDCMuIyEcFruAcEAxmZQYmLujACMAKTJAGLJAAzJAMyNXQCcrW3DSD3DUOhIYQD6BQCOhoxIcNlOrvYAIlBwjAFdvf2dAwAqjT1h6T2dAFprufYAogAeYvgFSAFhPV2dnfcbNj4YiEQqRRh4RgwT5oFYAtxAkE7QwFALpAAcACMBlBUp1MY1KliAGY9ADs6RxjTJqUqUEY6OJlUquCgXXSZNwqRpqXRGVw31wmPRjTCnTCZIGA0JQqJUE6qUEABp-HxiYZCJVSlY-KRiDBahByHwAN6qgSgSCwRAQfBFbB4IhkKjmvj6w0IQioIpIBDE7yPKCVCCkdWa7WEXVeorGs0CeN8aOMBDuKCYxjuPgBU2uhMoDCSRPe5NIEDATGodxAlyMPgAPmznVzfAAvjQEy2XQnUGII1mcwmBKU4A1C3HB0PGM84IXBDUAG5QABCEMIgFz5QBqsYALm0ApoqAZ0VAN8-gD-1ZXNgRIQyY3bT2ebRjEqCGdxwPipkBGOCnidDnuziuiVBgC_b8GmJGchB8YgREEZsWxVCc4FQStSjEMc4ObBomEIXBCwAbTPAdvwEWQ-CQDNGC1QpomLWdNBIBpgKI1k4CgQt3TECAEDpXYvB8ZYEGAWpQw1LVFEjUgoFjAiEwKOAUUjNRVGARh2yI1tyAIltmwAXXgwc9HwQSI02FEdjEwtGjxP49ITAyjLEwM6OIABVMRmMYWdFiIUpKgASUIDhjEY-MyL4qQ-HwojxyIpSPKEOAoM_GzvzgEAxDiwR2IgYKJzfD9Zy9UEcsHZjWLdA0OM9YskGS3KiAAa3CrKUwamrpL4bjGF4_BljYirOM67rllqwcYBwYBCzgGAlhGhNU3Tdwx3agQxFQTQI1nSDoNmwd_RgIzdhgWcTUxFsYLU1sdoEdwiEYNhUtHQiLsqStvFoowYEqRhionSoUXnYplnCzoEB6dr0IuwomDYMsK0WiLBEqd5KgYpUhFgMb0EEXT2qhu7Ycras4twsI0caTocch4AOI0fBwuitT_T-8LBDwGovs1EAfsHG7QXukBHoZi70DtPwLKbC6BC0i7pe_WWE201021dS1oHgZBmA4XsxNIHsIy7VtqCoIA
+	⚠ 请注意，该图表不是 Apache ECharts 官方示例，而是由用户代码生成的。请注意鉴别其内容。
+-->
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+<head>
+  <meta charset="utf-8">
+</head>
+<body style="height: 100%; margin: 0">
+  <div id="container" style="height: 100%"></div>
+
+  <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.7.1/jquery.min.js"></script>
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts/5.4.3/files/dist/echarts.min.js"></script>
+  <!-- Uncomment this line if you want to dataTool extension
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts/5.4.3/files/dist/extension/dataTool.min.js"></script>
+  -->
+  <!-- Uncomment this line if you want to use gl extension
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts-gl/2/files/dist/echarts-gl.min.js"></script>
+  -->
+  <!-- Uncomment this line if you want to echarts-stat extension
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts-stat/latest/files/dist/ecStat.min.js"></script>
+  -->
+  <!-- Uncomment this line if you want to use map
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts/4.9.0/files/map/js/china.js"></script>
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts/4.9.0/files/map/js/world.js"></script>
+  -->
+  <!-- Uncomment these two lines if you want to use bmap extension
+  <script type="text/javascript" src="https://api.map.baidu.com/api?v=3.0&ak=YOUR_API_KEY"></script>
+  <script type="text/javascript" src="https://registry.npmmirror.com/echarts/5.4.3/files/dist/extension/bmap.min.js"></script>
+  -->
+
+  <script type="text/javascript">
+    var dom = document.getElementById('container');
+    var myChart = echarts.init(dom, 'dark', {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
+    var app = {};
+    
+    var option;
+    var url = 'http://127.0.0.1:15665/json/all.json'
+    myChart.showLoading();
+$.getJSON(
+  url,
+  function (graph) {
+    myChart.hideLoading();
+    graph.nodes.forEach(function (node) {
+      node.label = {
+        show: node.symbolSize >= 0
+      };
+    });
+    option = {
+      title: {
+        text: 'javaBean依赖注入关系图',
+        subtext: 'Default layout',
+        top: 'bottom',
+        left: 'right'
+      },
+      tooltip: {},
+      legend: [
+        {
+          // selectedMode: 'single',
+          data: graph.categories.map(function (a) {
+            return a.name;
+          })
+        }
+      ],
+      animationDuration: 15000,
+      animationEasingUpdate: 'quinticInOut',
+      series: [
+        {
+          name: 'tght',
+          type: 'graph',
+          layout: 'none',
+          data: graph.nodes,
+          links: graph.links,
+          categories: graph.categories,
+          roam: true,
+          label: {
+            position: 'right',
+            formatter: '{b}'
+          },
+          lineStyle: {
+            color: 'source',
+            curveness: 0.3
+          },
+          edgeSymbol: ['circle', 'arrow'],
+          edgeSymbolSize: [4, 10],
+          emphasis: {
+            focus: 'adjacency',
+            lineStyle: {
+              width: 10
+            }
+          }
+        }
+      ]
+    };
+    myChart.setOption(option);
+  }
+);
+
+
+    if (option && typeof option === 'object') {
+      myChart.setOption(option);
+    }
+
+    window.addEventListener('resize', myChart.resize);
+  </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+
+<head>
+    <meta charset="utf-8">
+</head>
+
+<body style="height: 100%; margin: 0">
+<div style="float: left; width: 20%; padding: 10px; overflow-y: auto; height: 100%">
+    <ul id="fileList"></ul>
+</div>
+<div id="container" style="float: left; width: 80%; height: 100%"></div>
+
+<script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.7.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://registry.npmmirror.com/echarts/5.4.3/files/dist/echarts.min.js"></script>
+
+<script type="text/javascript">
+    var dom = document.getElementById('container');
+    var myChart = echarts.init(dom, 'dark', {
+        renderer: 'canvas',
+        useDirtyRect: false
+    });
+    var app = {};
+
+    var option;
+    var baseUrl = 'http://127.0.0.1:16556/json/';
+    var fileList = $('#fileList');
+
+    // 获取并填充文件列表
+    $.getJSON(
+        baseUrl,
+        function (files) {
+            files.forEach(function (file) {
+                fileList.append('<li>' + file + '</li>');
+            });
+
+            // 为列表项添加点击事件监听器
+            fileList.on('click', 'li', function () {
+                var selectedFile = $(this).text();
+                var url = baseUrl + selectedFile;
+
+                // 获取并使用新数据更新图表
+                myChart.showLoading();
+                $.getJSON(
+                    url,
+                    function (graph) {
+                        myChart.hideLoading();
+                        // 使用新数据更新图表
+                        // ...
+
+                        // 使用选定的文件名更新标题
+                        option.title.text = 'javaBean依赖注入关系图 - ' + selectedFile;
+                        myChart.setOption(option);
+                    }
+                );
+            });
+        }
+    );
+
+    // 初始图表配置
+    option = {
+        // 初始的图表配置
+    };
+
+    if (option && typeof option === 'object') {
+        myChart.setOption(option);
+    }
+
+    window.addEventListener('resize', myChart.resize);
+</script>
+</body>
+
+</html>
