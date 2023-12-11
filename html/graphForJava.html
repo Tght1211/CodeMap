@@ -63,6 +63,7 @@
             right: 0;
             top: 0;
         }
+
         .tapInfo {
             width: 300px;
             margin-left: 10px;
@@ -73,177 +74,180 @@
 </head>
 
 <body style="height: 100%; margin: 0;padding: 0">
-    <div style="display:flex; height: 100vh; width: 100%">
-        <div id="leftPanel">
-            <div class="tapInfo">😀：健康依赖</div>
-            <div class="tapInfo">🧨：存在循环依赖待解决</div>
-            <div class="tapInfo">🍜：@Lazy已解决循环依赖</div>
-            <!-- 添加搜索框 -->
-            <input style="margin-left: 10px" type="text" id="searchInput" placeholder="模糊搜索">
-            <div id="leftPanelInner">
-                <ul style="padding: 0" id="fileList"></ul>
-            </div>
-            <div id="dragBar"></div>
+<div style="display:flex; height: 100vh; width: 100%">
+    <div id="leftPanel">
+        <div class="tapInfo">🎯：<a href="https://github.com/Tght1211/CodeMap" style="color:#ffd11b">感谢 start</a>⭐⭐⭐</div>
+        <div class="tapInfo">😀：健康依赖</div>
+        <div class="tapInfo">🧨：存在循环依赖待解决</div>
+        <div class="tapInfo">🍜：@Lazy已解决循环依赖</div>
+        <!-- 添加搜索框 -->
+        <input style="margin-left: 10px" type="text" id="searchInput" placeholder="模糊搜索">
+        <div id="leftPanelInner">
+            <ul style="padding: 0" id="fileList"></ul>
         </div>
-        <div id="container"></div>
+        <div id="dragBar"></div>
     </div>
+    <div id="container"></div>
+</div>
 
-    <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.7.1/jquery.min.js"></script>
-    <script type="text/javascript"
+<script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.7.1/jquery.min.js"></script>
+<script type="text/javascript"
         src="https://registry.npmmirror.com/echarts/5.4.3/files/dist/echarts.min.js"></script>
 
-    <script type="text/javascript">
-        var dom = document.getElementById('container');
-        var myChart = echarts.init(dom, 'dark', {
-            renderer: 'canvas',
-            useDirtyRect: false
-        });
-        var app = {};
+<script type="text/javascript">
+    var dom = document.getElementById('container');
+    var myChart = echarts.init(dom, 'dark', {
+        renderer: 'canvas',
+        useDirtyRect: false
+    });
+    var app = {};
 
-        var option;
-        var baseUrl = 'http://192.168.70.59:15665/json/';
-        var fileList = $('#fileList');
-        var searchInput = $('#searchInput');
+    var option;
+    var baseUrl = 'http://127.0.0.1:15665/json/';
+    var fileList = $('#fileList');
+    var searchInput = $('#searchInput');
 
-        // 获取并填充文件列表
-        $.get(
-            baseUrl,
-            function (html) {
-                // 通过 DOMParser 解析 HTML 字符串
-                var parser = new DOMParser();
-                var doc = parser.parseFromString(html, 'text/html');
-                // 获取所有的 <a> 标签
-                var anchorElements = doc.querySelectorAll('a');
-                // 遍历所有的 <a> 标签并输出文本信息
-                anchorElements.forEach(function (element) {
-                    var fileName = element.innerText
+    // 获取并填充文件列表
+    $.get(
+        baseUrl,
+        function (html) {
+            // 通过 DOMParser 解析 HTML 字符串
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            // 获取所有的 <a> 标签
+            var anchorElements = doc.querySelectorAll('a');
+            // 遍历所有的 <a> 标签并输出文本信息
+            anchorElements.forEach(function (element) {
+                var fileName = element.innerText
+                if (fileName.indexOf(".json") !== -1) {
                     fileList.append('<li>' + fileName + '</li>');
                     console.log(element.textContent || element.innerText);
-                });
+                }
+            });
 
-                // 添加搜索功能
-                searchInput.on('input', function () {
-                    var searchText = $(this).val().toLowerCase();
-                    fileList.find('li').hide().filter(function () {
-                        return $(this).text().toLowerCase().includes(searchText);
-                    }).show();
-                });
+            // 添加搜索功能
+            searchInput.on('input', function () {
+                var searchText = $(this).val().toLowerCase();
+                fileList.find('li').hide().filter(function () {
+                    return $(this).text().toLowerCase().includes(searchText);
+                }).show();
+            });
 
-                // 为列表项添加点击事件监听器
-                fileList.on('click', 'li', function () {
-                    console.log("List item clicked!"); // 用于调试的新行
-                    var selectedFile = $(this).text();
-                    var url = baseUrl + selectedFile;
+            // 为列表项添加点击事件监听器
+            fileList.on('click', 'li', function () {
+                console.log("List item clicked!"); // 用于调试的新行
+                var selectedFile = $(this).text();
+                var url = baseUrl + selectedFile;
 
-                    // 移除之前选中项的选中状态
-                    fileList.find('li').removeClass('selected');
-                    // 添加选中状态的背景颜色
-                    $(this).addClass('selected');
+                // 移除之前选中项的选中状态
+                fileList.find('li').removeClass('selected');
+                // 添加选中状态的背景颜色
+                $(this).addClass('selected');
 
-                    console.log("Selected URL:", url); // 用于调试的新行
-                    myChart.showLoading();
-                    $.getJSON(
-                        url,
-                        function (graph) {
-                            myChart.hideLoading();
-                            graph.nodes.forEach(function (node) {
-                                node.label = {
-                                    show: node.symbolSize >= 0
-                                };
-                            });
-                            option = {
-                                title: {
-                                    text: 'javaBean依赖注入关系图',
-                                    subtext: 'Default layout',
-                                    top: 'bottom',
-                                    left: 'right'
-                                },
-                                tooltip: {},
-                                legend: [
-                                    {
-                                        // selectedMode: 'single',
-                                        data: graph.categories.map(function (a) {
-                                            return a.name;
-                                        })
-                                    }
-                                ],
-                                animationDuration: 15000,
-                                animationEasingUpdate: 'quinticInOut',
-                                series: [
-                                    {
-                                        name: 'tght',
-                                        type: 'graph',
-                                        layout: 'none',
-                                        data: graph.nodes,
-                                        links: graph.links,
-                                        categories: graph.categories,
-                                        roam: true,
-                                        label: {
-                                            position: 'right',
-                                            formatter: '{b}'
-                                        },
+                console.log("Selected URL:", url); // 用于调试的新行
+                myChart.showLoading();
+                $.getJSON(
+                    url,
+                    function (graph) {
+                        myChart.hideLoading();
+                        graph.nodes.forEach(function (node) {
+                            node.label = {
+                                show: node.symbolSize >= 0
+                            };
+                        });
+                        option = {
+                            title: {
+                                text: 'javaBean依赖注入关系图',
+                                subtext: 'Default layout',
+                                top: 'bottom',
+                                left: 'right'
+                            },
+                            tooltip: {},
+                            legend: [
+                                {
+                                    // selectedMode: 'single',
+                                    data: graph.categories.map(function (a) {
+                                        return a.name;
+                                    })
+                                }
+                            ],
+                            animationDuration: 15000,
+                            animationEasingUpdate: 'quinticInOut',
+                            series: [
+                                {
+                                    name: 'tght',
+                                    type: 'graph',
+                                    layout: 'none',
+                                    data: graph.nodes,
+                                    links: graph.links,
+                                    categories: graph.categories,
+                                    roam: true,
+                                    label: {
+                                        position: 'right',
+                                        formatter: '{b}'
+                                    },
+                                    lineStyle: {
+                                        color: 'source',
+                                        curveness: 0.3
+                                    },
+                                    edgeSymbol: ['circle', 'arrow'],
+                                    edgeSymbolSize: [4, 10],
+                                    emphasis: {
+                                        focus: 'adjacency',
                                         lineStyle: {
-                                            color: 'source',
-                                            curveness: 0.3
-                                        },
-                                        edgeSymbol: ['circle', 'arrow'],
-                                        edgeSymbolSize: [4, 10],
-                                        emphasis: {
-                                            focus: 'adjacency',
-                                            lineStyle: {
-                                                width: 10
-                                            }
+                                            width: 10
                                         }
                                     }
-                                ]
-                            };
-                            myChart.setOption(option);
-                        }
-                    );
-                });
+                                }
+                            ]
+                        };
+                        myChart.setOption(option);
+                    }
+                );
+            });
 
-                // 手动触发第一个列表项的点击事件
-                fileList.find('li:first').click();
-            }
-        );
-
-        if (option && typeof option === 'object') {
-            myChart.setOption(option);
+            // 手动触发第一个列表项的点击事件
+            fileList.find('li:first').click();
         }
+    );
 
-        // 添加拖动调整宽度的逻辑
-        var isDragging = false;
-        var startX, startWidth;
+    if (option && typeof option === 'object') {
+        myChart.setOption(option);
+    }
 
-        $('#dragBar').mousedown(function (e) {
-            isDragging = true;
-            startX = e.pageX;
-            startWidth = $('#leftPanel').width();
-            //阻止默认行为和事件传播
-            e.preventDefault();
-            e.stopPropagation();
-        });
+    // 添加拖动调整宽度的逻辑
+    var isDragging = false;
+    var startX, startWidth;
 
-        $(document).mousemove(function (e) {
-            if (isDragging) {
-                var newWidth = startWidth + (e.pageX - startX);
-                $('#leftPanel').width(newWidth);
-                $('#container').width($(window).width() - newWidth);
-            }
-        });
+    $('#dragBar').mousedown(function (e) {
+        isDragging = true;
+        startX = e.pageX;
+        startWidth = $('#leftPanel').width();
+        //阻止默认行为和事件传播
+        e.preventDefault();
+        e.stopPropagation();
+    });
 
-        $(document).mouseup(function () {
-            isDragging = false;
-        });
+    $(document).mousemove(function (e) {
+        if (isDragging) {
+            var newWidth = startWidth + (e.pageX - startX);
+            $('#leftPanel').width(newWidth);
+            $('#container').width($(window).width() - newWidth);
+        }
+    });
 
-        window.addEventListener('resize', function () {
-            myChart.resize();
-            // 动态调整右侧容器的宽度
-            var leftPanelWidth = $('#leftPanel').width();
-            $('#container').width($(window).width() - leftPanelWidth);
-            $('#dragBar').css('right', 0); // Reset the position of the drag bar
-        });
-    </script>
+    $(document).mouseup(function () {
+        isDragging = false;
+    });
+
+    window.addEventListener('resize', function () {
+        myChart.resize();
+        // 动态调整右侧容器的宽度
+        var leftPanelWidth = $('#leftPanel').width();
+        $('#container').width($(window).width() - leftPanelWidth);
+        $('#dragBar').css('right', 0); // Reset the position of the drag bar
+    });
+</script>
 </body>
 
 </html>

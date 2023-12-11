@@ -1,7 +1,8 @@
 # CodeMap
 > 致力于①快速上手项目，②找出屎山代码
->
-> 项目设定内网环境：http://127.0.0.1:15665/html/graphForJava.html 
+> 项目体验地址：https://www.shana.asia/codeMap/html/graphForJava.html
+> 
+> 项目设定内网环境（比如）：http://127.0.0.1:15665/html/graphForJava.html 
 >
 > 基于python+html
 
@@ -12,7 +13,7 @@
 ## 1、启动方式
 
 ###  1 .1、找到setp07.py
-
+> step08是关掉本地服务
 点击main方法启动
 
 ###  1 .2、找到setp06.py
