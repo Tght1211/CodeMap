@@ -22,7 +22,8 @@ project_name = ''
 sys.setrecursionlimit(10000)
 visited_nodes_all = []
 map_interface_impl = {}
-
+multiple = 1
+elastic_distance = 1.8
 
 def add_node_info(root, graph, node, parent_info=""):
     visited_nodes_all.append(node)
@@ -151,7 +152,7 @@ def start(rootPath):
         add_node_info(node, G, node)
 
     # 调整 k 的值以控制节点之间的距离
-    pos = nx.spring_layout(G, k=0.9)
+    pos = nx.spring_layout(G, k=elastic_distance)
 
     # todo:调整，改成根据包路径来分类 [目前先安装依赖数量分类]
     for node in G.nodes:
@@ -164,7 +165,8 @@ def start(rootPath):
         if len(G.nodes[node]) != 0:
             parent_path = G.nodes[node]['parent_info']
             children = G.nodes[node]['children']
-        data = NodeData(node, node, son * 5, pos.get(node)[0], pos.get(node)[1], son, category, parent_path, children)
+        data = NodeData(node, node, son * multiple, pos.get(node)[0], pos.get(node)[1], son, category, parent_path,
+                        children)
         nodes.append(data)
 
     # 拾取判断循环依赖
@@ -195,11 +197,11 @@ def start(rootPath):
         health = generate_child_nodes_json(health, node, child_G, child_links, G, node, parent_path, visited_nodes)
 
         # 调整 k 的值以控制节点之间的距离
-        pos = nx.spring_layout(child_G, k=0.9)
+        pos = nx.spring_layout(child_G, k=elastic_distance)
 
         for children_node in visited_nodes:
             children_num = len(G.nodes[children_node]["children"])
-            node_data = NodeData(children_node, children_node, children_num * 5, pos.get(children_node)[0],
+            node_data = NodeData(children_node, children_node, children_num * multiple, pos.get(children_node)[0],
                                  pos.get(children_node)[1], children_num,
                                  cat(children_num), parent_path, G.nodes[children_node]["children"])
             child_node_data.append(node_data)
@@ -265,19 +267,27 @@ def generate_child_nodes_json(health, root, child_G, child_links, graph, parent_
                                                                 field_declaration.type.name) + '.java' in name_list and process_resource_annotation(
                                                             field_declaration.annotations) and lazy(
                                                             field_declaration.annotations):
+                                                            res = file_name.rsplit('.', 1)[0] + '🍜'
                                                             if health == '😀':
-                                                                health = '🍜' + file_name.rsplit('.', 1)[0]
+                                                                health = '🎈' + res
                                                             else:
-                                                                health = health + '🍜' + file_name.rsplit('.', 1)[0]
+                                                                if res in health:
+                                                                    health = health.replace(res, res + "🍜")
+                                                                else:
+                                                                    health = health + res
                                                             raise BreakOuterLoop  # 抛出自定义异常以跳出外层循环
             except BreakOuterLoop:
                 count = 1
                 pass
             if count == 0:
+                res = map_interface_impl.get(str(parent_node)) + '🧨'
                 if health == '😀':
-                    health = '🧨' + map_interface_impl.get(str(parent_node))
+                    health = '🎈' + res
                 else:
-                    health = health + '🧨' + map_interface_impl.get(str(parent_node))
+                    if res in health:
+                        health = health.replace(res, res + "🧨")
+                    else:
+                        health = health + res
         if child_node not in visited_nodes:
             visited_nodes.add(child_node)
             child_path = f"{parent_node} -> {parent_path}"
@@ -348,6 +358,6 @@ def delete_files_in_folder(folder_path):
 if __name__ == '__main__':
     # 填入你的java项目根目录绝对路径
     # 目前只扫描@Service 和@Component 类和它的@Autowired属性的关系以及裙带关系。
-    rootPath = "D:\\Data\\Money\\MallChat\\boot\\MallChat"
-    project_name = '01-MallChat'
+    rootPath = "D:\\data\\javaWork\\magicube-core"
+    project_name = '01-magicube-core'
     start(rootPath)
