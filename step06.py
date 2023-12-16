@@ -169,7 +169,8 @@ def start(rootPath):
         if len(G.nodes[node]) != 0:
             parent_path = G.nodes[node]['parent_info']
             children = G.nodes[node]['children']
-        data = NodeData(node, node, son * multiple, pos.get(node)[0], pos.get(node)[1], son, category, parent_path,
+        data = NodeData(node, node, (son + 1) * multiple, pos.get(node)[0], pos.get(node)[1], son, category,
+                        parent_path,
                         children)
         nodes.append(data)
 
@@ -181,7 +182,7 @@ def start(rootPath):
 
     json_str = json.dumps(res_dict)
     print(f"当前项目全部依赖：\n {json_str}")
-    file_path = 'json/' + project_name[2:] +'/'+ project_name + '.json'
+    file_path = 'json/' + project_name[2:] + '/' + project_name + '.json'
 
     folder_path_to_clear = 'json/' + project_name[2:] + '/'
     floder(f'json/{project_name[2:]}')
@@ -205,7 +206,7 @@ def start(rootPath):
 
         for children_node in visited_nodes:
             children_num = len(G.nodes[children_node]["children"])
-            node_data = NodeData(children_node, children_node, children_num * multiple, pos.get(children_node)[0],
+            node_data = NodeData(children_node, children_node, (children_num + 1) * multiple, pos.get(children_node)[0],
                                  pos.get(children_node)[1], children_num,
                                  cat(children_num), parent_path, G.nodes[children_node]["children"])
             child_node_data.append(node_data)
@@ -370,11 +371,11 @@ def delete_files_in_folder(folder_path):
 if __name__ == '__main__':
     # 填入你的java项目根目录绝对路径
     # 目前只扫描@Service 和@Component 类和它的@Autowired属性的关系以及裙带关系。
-    rootPath = "D:\\data\\javaWork\\moredian-fishnet-web" # 支持面板填写（本地项目路径）
+    rootPath = "D:\\data\\javaWork\\magicube-openapi"  # 支持面板填写（本地项目路径）
     pathZu = rootPath.split("\\")
-    name = '' # 支持面板填写（项目名称）
-    elastic_distance = 1.8 # 支持面板填写（节点距离）
-    multiple = 1 # 支持面板填写
+    name = ''  # 支持面板填写（项目名称）
+    elastic_distance = 1.8  # 支持面板填写（节点距离）
+    multiple = 1  # 支持面板填写
     if name == '':
         name = pathZu[len(pathZu) - 1]
     project_name = '0-' + name
