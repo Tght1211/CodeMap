@@ -4,6 +4,9 @@ import os
 from javalang import parse, tree
 import json
 import Levenshtein
+import tkinter as tk
+from tkinter import filedialog
+from functools import partial
 
 nodes = []
 links = []
@@ -24,6 +27,7 @@ visited_nodes_all = []
 map_interface_impl = {}
 multiple = 1
 elastic_distance = 1.8
+
 
 def add_node_info(root, graph, node, parent_info=""):
     visited_nodes_all.append(node)
@@ -177,11 +181,11 @@ def start(rootPath):
 
     json_str = json.dumps(res_dict)
     print(f"当前项目全部依赖：\n {json_str}")
-    file_path = 'json/' + project_name + '.json'
+    file_path = 'json/' + project_name[2:] +'/'+ project_name + '.json'
 
-    folder_path_to_clear = 'json/'
+    folder_path_to_clear = 'json/' + project_name[2:] + '/'
+    floder(f'json/{project_name[2:]}')
     delete_files_in_folder(folder_path_to_clear)
-
     with open(file_path, 'w') as f:
         f.write(json_str)
     # plt.show()
@@ -213,8 +217,7 @@ def start(rootPath):
         child_json_str = json.dumps(child_res_dict)
         print("\n ====================== ")
         print("\n" + child_json_str)
-
-        child_json_filename = f'json/{node}-{health}.json'
+        child_json_filename = f'json/{project_name[2:]}/{node}-{health}.json'
         with open(child_json_filename, 'w') as child_json_file:
             child_json_file.write(child_json_str)
         print(f"Child JSON file generated: {child_json_filename}")
@@ -222,6 +225,15 @@ def start(rootPath):
 
 class BreakOuterLoop(Exception):
     pass
+
+
+def floder(folder_name):
+    # 检查文件夹是否存在，如果不存在则创建
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+        print(f"文件夹 '{folder_name}' 已创建成功。")
+    else:
+        print(f"文件夹 '{folder_name}' 已经存在。")
 
 
 def generate_child_nodes_json(health, root, child_G, child_links, graph, parent_node, parent_path, visited_nodes):
@@ -358,6 +370,12 @@ def delete_files_in_folder(folder_path):
 if __name__ == '__main__':
     # 填入你的java项目根目录绝对路径
     # 目前只扫描@Service 和@Component 类和它的@Autowired属性的关系以及裙带关系。
-    rootPath = "D:\\data\\javaWork\\magicube-core"
-    project_name = '01-magicube-core'
+    rootPath = "D:\\data\\javaWork\\moredian-fishnet-web" # 支持面板填写（本地项目路径）
+    pathZu = rootPath.split("\\")
+    name = '' # 支持面板填写（项目名称）
+    elastic_distance = 1.8 # 支持面板填写（节点距离）
+    multiple = 1 # 支持面板填写
+    if name == '':
+        name = pathZu[len(pathZu) - 1]
+    project_name = '0-' + name
     start(rootPath)

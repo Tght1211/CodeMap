@@ -70,13 +70,89 @@
             padding: 10px;
             color: white;
         }
+
+        /* 重新定义下拉框样式 */
+        #projectDropdown {
+            background-color: #0f011d; /* 背景颜色 */
+            color: #ffa500; /* 文字颜色 */
+            font-size: 16px !important; /* 文字大小 */
+            border: 1px solid #555; /* 边框样式 */
+            border-radius: 4px; /* 边框圆角 */
+            margin-left: 20px !important;
+            width: 70%;
+        }
+
+        /* 鼠标悬停时的样式 */
+        #projectDropdown:hover {
+            background-color: #1a001f;
+        }
+
+        /* 下拉框中的选项样式 */
+        #projectDropdown option {
+            background-color: #0f011d; /* 背景颜色 */
+            color: #ffa500; /* 文字颜色 */
+            font-size: 16px; /* 文字大小 */
+        }
+
+        /* 新增样式，用于美化设置弹窗 */
+        #settingsModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 300px;
+            background-color: #2e2e2e; /* 设置弹窗背景颜色 */
+            border: 1px solid #555;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            color: white; /* 设置弹窗文字颜色 */
+        }
+
+        /* 新增样式，用于美化设置弹窗中的控件 */
+        #settingsModal label {
+            display: block;
+            margin: 10px 0;
+        }
+
+        #settingsModal input {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        #settingsModal button {
+            padding: 8px;
+            font-size: 14px;
+            background-color: #4caf50; /* 设置按钮背景颜色 */
+            color: white; /* 设置按钮文字颜色 */
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #settingsModal button:hover {
+            background-color: #45a049; /* 鼠标悬停时的按钮背景颜色 */
+        }
     </style>
 </head>
 
 <body style="height: 100%; margin: 0;padding: 0">
 <div style="display:flex; height: 100vh; width: 100%">
     <div id="leftPanel">
-        <div class="tapInfo">🎯：<a href="https://github.com/Tght1211/CodeMap" style="color:#ffd11b">感谢 start</a>⭐⭐⭐</div>
+        <!-- 新增下拉框用于项目选择 -->
+        <div style="display: flex; align-items: center; margin: 10px;">
+            <!-- 添加设置按钮 -->
+            <button id="settingsButton" style="margin-left: 10px; padding: 8px; font-size: 14px;">设置</button>
+            <select id="projectDropdown" style="margin: 10px; padding: 8px; font-size: 14px;">
+                <!-- 下拉框选项将在JavaScript中动态填充 -->
+            </select>
+        </div>
+        <div class="tapInfo">🎯：<a href="https://github.com/Tght1211/CodeMap" style="color:#ffd11b">感谢 start</a>⭐⭐⭐
+        </div>
         <div class="tapInfo">😀：健康依赖</div>
         <div class="tapInfo">🧨：存在循环依赖待解决</div>
         <div class="tapInfo">🍜：@Lazy已解决循环依赖</div>
@@ -88,6 +164,14 @@
         <div id="dragBar"></div>
     </div>
     <div id="container"></div>
+    <div id="settingsModal">
+        <div style="padding: 20px;">
+            <h2>设置</h2>
+            <label for="parameterInput">结点倍数：</label>
+            <input type="number" id="parameterInput" step="0.5" min="0" max="5" style="width: 100%;" placeholder="请输入倍数值">
+            <button id="applySettingsButton">应用设置</button>
+        </div>
+    </div>
 </div>
 
 <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.7.1/jquery.min.js"></script>
@@ -101,15 +185,85 @@
         useDirtyRect: false
     });
     var app = {};
-
+    var graphAll; // 将 graph 变量声明为全局变量
     var option;
-    var baseUrl = 'http://127.0.0.1:15665/json/';
+    var baseIP = "http://192.168.3.72:15665/"
+    var baseUrl = baseIP + 'json/';
     var fileList = $('#fileList');
     var searchInput = $('#searchInput');
 
-    // 获取并填充文件列表
+
+    // 新增代码：获取项目映射文件中的项目列表，并填充下拉框
+    var projectDropdown = $('#projectDropdown');
+
+
+    // 获取设置按钮和弹窗元素
+    var settingsButton = $('#settingsButton');
+    var settingsModal = $('#settingsModal');
+    var applySettingsButton = $('#applySettingsButton');
+    var parameterInput = $('#parameterInput');
+
+    // 设置按钮点击事件
+    settingsButton.click(function () {
+        // 显示弹窗
+        settingsModal.show();
+    });
+
+    // 新增代码：在弹窗显示时，初始化倍数值输入框
+    settingsModal.on('show', function () {
+        var defaultParameterValue = 1; // 设置默认值
+        parameterInput.val(defaultParameterValue);
+    });
+
+    // 添加点击事件监听器，关闭弹窗
+    $(document).on('click', function (event) {
+        // 检查点击的目标是否在弹窗外部
+        if (!settingsModal.is(event.target) && settingsModal.has(event.target).length === 0) {
+            // 关闭弹窗
+            settingsModal.hide();
+        }
+    });
+
+    // 设置按钮点击事件
+    settingsButton.click(function (event) {
+        // 显示弹窗
+        settingsModal.show();
+        // 阻止事件冒泡
+        event.stopPropagation();
+    });
+
+    // 应用设置按钮点击事件
+    applySettingsButton.click(function () {
+        // 获取用户输入的参数值
+        var newParameterValue = parameterInput.val();
+        // 在这里处理参数值，更新到JavaScript中的相应变量
+        updateNodeSize(newParameterValue)
+        // 隐藏弹窗
+        settingsModal.hide();
+    });
+
+    // 更新节点大小的函数
+    function updateNodeSize(newSize) {
+        console.log('Updating node size with new value:', newSize);
+        // 在这里更新echarts中节点的大小属性
+        // 假设你的echarts的数据结构是存储在 graph 变量中的
+        graphAll.nodes.forEach(function (node) {
+            // 在这里根据需要更新节点的大小
+            node.symbolSize *= newSize;
+        });
+        console.log('Updated node sizes:', graphAll.nodes.map(node => node.symbolSize));
+
+        // 更新echarts的图表
+        myChart.setOption({
+            series: [{
+                data: graphAll.nodes
+            }]
+        });
+    }
+
+
     $.get(
-        baseUrl,
+        baseUrl, // 替换成实际的项目映射文件路径
         function (html) {
             // 通过 DOMParser 解析 HTML 字符串
             var parser = new DOMParser();
@@ -119,97 +273,136 @@
             // 遍历所有的 <a> 标签并输出文本信息
             anchorElements.forEach(function (element) {
                 var fileName = element.innerText
-                if (fileName.indexOf(".json") !== -1) {
-                    fileList.append('<li>' + fileName + '</li>');
+                if (fileName.indexOf("/") !== -1) {
+                    // 填充下拉框选项
+                    projectDropdown.append('<option value="' + baseUrl + fileName + '">' + fileName + '</option>');
+
                     console.log(element.textContent || element.innerText);
                 }
             });
-
-            // 添加搜索功能
-            searchInput.on('input', function () {
-                var searchText = $(this).val().toLowerCase();
-                fileList.find('li').hide().filter(function () {
-                    return $(this).text().toLowerCase().includes(searchText);
-                }).show();
+            // 新增下拉框选择事件监听器
+            projectDropdown.change(function () {
+                var selectedBaseUrl = $(this).val();
+                // 更新 baseUrl 变量的值
+                baseUrl = selectedBaseUrl;
+                // 刷新侧边的数据，文件路径，重新加载数据
+                refreshFileList();
             });
 
-            // 为列表项添加点击事件监听器
-            fileList.on('click', 'li', function () {
-                console.log("List item clicked!"); // 用于调试的新行
-                var selectedFile = $(this).text();
-                var url = baseUrl + selectedFile;
-
-                // 移除之前选中项的选中状态
-                fileList.find('li').removeClass('selected');
-                // 添加选中状态的背景颜色
-                $(this).addClass('selected');
-
-                console.log("Selected URL:", url); // 用于调试的新行
-                myChart.showLoading();
-                $.getJSON(
-                    url,
-                    function (graph) {
-                        myChart.hideLoading();
-                        graph.nodes.forEach(function (node) {
-                            node.label = {
-                                show: node.symbolSize >= 0
-                            };
-                        });
-                        option = {
-                            title: {
-                                text: 'javaBean依赖注入关系图',
-                                subtext: 'Default layout',
-                                top: 'bottom',
-                                left: 'right'
-                            },
-                            tooltip: {},
-                            legend: [
-                                {
-                                    // selectedMode: 'single',
-                                    data: graph.categories.map(function (a) {
-                                        return a.name;
-                                    })
-                                }
-                            ],
-                            animationDuration: 15000,
-                            animationEasingUpdate: 'quinticInOut',
-                            series: [
-                                {
-                                    name: 'tght',
-                                    type: 'graph',
-                                    layout: 'none',
-                                    data: graph.nodes,
-                                    links: graph.links,
-                                    categories: graph.categories,
-                                    roam: true,
-                                    label: {
-                                        position: 'right',
-                                        formatter: '{b}'
-                                    },
-                                    lineStyle: {
-                                        color: 'source',
-                                        curveness: 0.3
-                                    },
-                                    edgeSymbol: ['circle', 'arrow'],
-                                    edgeSymbolSize: [4, 10],
-                                    emphasis: {
-                                        focus: 'adjacency',
-                                        lineStyle: {
-                                            width: 10
-                                        }
-                                    }
-                                }
-                            ]
-                        };
-                        myChart.setOption(option);
-                    }
-                );
-            });
-
-            // 手动触发第一个列表项的点击事件
-            fileList.find('li:first').click();
+            // 手动触发下拉框的选择事件以加载默认项目数据
+            projectDropdown.change();
         }
     );
+
+
+    // 定义刷新文件列表的函数
+    function refreshFileList() {
+        fileList.empty(); // 清空文件列表
+        // 获取并填充文件列表
+        $.get(
+            baseUrl,
+            function (html) {
+                // 通过 DOMParser 解析 HTML 字符串
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+                // 获取所有的 <a> 标签
+                var anchorElements = doc.querySelectorAll('a');
+                // 遍历所有的 <a> 标签并输出文本信息
+                anchorElements.forEach(function (element) {
+                    var fileName = element.innerText
+                    if (fileName.indexOf(".json") !== -1) {
+                        fileList.append('<li>' + fileName + '</li>');
+                        console.log(element.textContent || element.innerText);
+                    }
+                });
+
+                // 添加搜索功能
+                searchInput.on('input', function () {
+                    var searchText = $(this).val().toLowerCase();
+                    fileList.find('li').hide().filter(function () {
+                        return $(this).text().toLowerCase().includes(searchText);
+                    }).show();
+                });
+
+                // 为列表项添加点击事件监听器
+                fileList.on('click', 'li', function () {
+                    console.log("List item clicked!"); // 用于调试的新行
+                    var selectedFile = $(this).text();
+                    var url = baseUrl + selectedFile;
+
+                    // 移除之前选中项的选中状态
+                    fileList.find('li').removeClass('selected');
+                    // 添加选中状态的背景颜色
+                    $(this).addClass('selected');
+
+                    console.log("Selected URL:", url); // 用于调试的新行
+                    myChart.showLoading();
+                    $.getJSON(
+                        url,
+                        function (graph) {
+                            myChart.hideLoading();
+                            graphAll = graph
+                            graph.nodes.forEach(function (node) {
+                                node.label = {
+                                    show: node.symbolSize >= 0
+                                };
+                            });
+                            option = {
+                                title: {
+                                    text: 'javaBean依赖注入关系图',
+                                    subtext: 'Default layout',
+                                    top: 'bottom',
+                                    left: 'right'
+                                },
+                                tooltip: {},
+                                legend: [
+                                    {
+                                        // selectedMode: 'single',
+                                        data: graph.categories.map(function (a) {
+                                            return a.name;
+                                        })
+                                    }
+                                ],
+                                animationDuration: 15000,
+                                animationEasingUpdate: 'quinticInOut',
+                                series: [
+                                    {
+                                        name: 'tght',
+                                        type: 'graph',
+                                        layout: 'none',
+                                        data: graph.nodes,
+                                        links: graph.links,
+                                        categories: graph.categories,
+                                        roam: true,
+                                        label: {
+                                            position: 'right',
+                                            formatter: '{b}'
+                                        },
+                                        lineStyle: {
+                                            color: 'source',
+                                            curveness: 0.3
+                                        },
+                                        edgeSymbol: ['circle', 'arrow'],
+                                        edgeSymbolSize: [4, 10],
+                                        emphasis: {
+                                            focus: 'adjacency',
+                                            lineStyle: {
+                                                width: 10
+                                            }
+                                        }
+                                    }
+                                ]
+                            };
+                            myChart.setOption(option);
+                        }
+                    );
+                });
+                // 手动触发第一个列表项的点击事件
+                fileList.find('li:first').click();
+            }
+        );
+    }
+
 
     if (option && typeof option === 'object') {
         myChart.setOption(option);

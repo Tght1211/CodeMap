@@ -23,7 +23,7 @@ def start_server(server_port):
 
 if __name__ == '__main__':
     # 使用webbrowser在默认浏览器中打开修改后的HTML文件
-    webbrowser.open("http://192.168.70.59:15665/html/graphForJava.html")
+    webbrowser.open("http://192.168.3.72:15665/html/graphForJava.html")
     # 使用端口号15665，你也可以选择其他端口号
     port = 15665
     start_server(port)
